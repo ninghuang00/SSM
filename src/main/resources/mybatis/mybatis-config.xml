@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- 配置全局属性 -->
+    <settings>
+        <!--开启延迟加载功能-->
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <!--对任意延迟属性的调用会使带有延迟加载属性的对象完整加载-->
+        <!--即将积极加载改成按需加载-->
+        <setting name="aggressiveLazyLoading" value="false"/>
+         <!--开启驼峰命名转换:Table{create_time} -> Entity{createTime} -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+
+        <!--使用jdbc的getGeneratedKeys获取数据库自增主键值 -->
+        <!--<setting name="useGeneratedKeys" value="true"/>-->
+
+        <!--使用列别名替换列名 默认:true -->
+        <!--<setting name="useColumnLabel" value="true"/>-->
+    </settings>
+
+    <!-- 定义别名 -->
+    <typeAliases>
+        <!--批量扫描的方式定义别名  -->
+        <package name="cn.edu.art.ssm.model"/>
+        <package name="java.lang"/>
+    </typeAliases>
+
+    <!-- 使用自动扫描器时，mapper.xml文件如果和mapper.java接口在一个目录则此处不用定义mappers -->
+    <!-- <mappers>
+    <package name="cn.itcast.ssm.mapper" />
+    </mappers> -->
+
+</configuration>

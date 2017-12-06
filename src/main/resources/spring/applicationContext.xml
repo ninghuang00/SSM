@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!--************************************ 1. spring-dao部分 ******************************************-->
+
+    <!-- 配置整合mybatis过程 -->
+    <!-- 1.配置数据库相关参数properties的属性：${url} -->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <!-- 配置数据库连接池 ，这里使用的是dbcp连接池,c3p0综合评价最低不用了-->
+    <!-- <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource" destroy-method="close" >
+           <property name="driverClassName" value="${jdbc.driver}"/>
+            <property name="url" value="${jdbc.url}"/>
+            <property name="username" value="${jdbc.username}"/>
+            <property name="password" value="${jdbc.password}"/>
+            <property name="maxActive" value="100"/>
+            <property name="maxIdle" value="5"/>
+            <property name="validationQuery" value="select 1"/>
+            <property name="testWhileIdle" value="true"/>
+            <property name="timeBetweenEvictionRunsMillis" value="3600000"/>
+            <property name="minEvictableIdleTimeMillis" value="1800000"/>
+            <property name="testOnBorrow" value="true"/>
+
+    </bean>	 -->
+
+    <!-- 2.数据库连接池 -->
+    <bean name="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password}" />
+
+        <!-- 初始化连接大小 -->
+        <property name="initialSize" value="1" />
+        <!-- 连接池最大使用连接数量 -->
+        <property name="maxActive" value="20" />
+
+        <!-- 连接池最小空闲 -->
+        <property name="minIdle" value="0" />
+        <!-- 获取连接最大等待时间 -->
+        <property name="maxWait" value="60000" />
+        <property name="poolPreparedStatements" value="true" />
+        <property name="maxPoolPreparedStatementPerConnectionSize"
+                  value="33" />
+        <!-- 用来检测有效sql -->
+        <property name="validationQuery" value="SELECT 'x' FROM DUAL" />
+        <property name="testOnBorrow" value="false" />
+        <property name="testOnReturn" value="false" />
+        <property name="testWhileIdle" value="true" />
+        <!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+        <property name="timeBetweenEvictionRunsMillis" value="60000" />
+        <!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+        <property name="minEvictableIdleTimeMillis" value="25200000" />
+        <!-- 打开removeAbandoned功能 -->
+        <property name="removeAbandoned" value="true" />
+        <!-- 1800秒，也就是30分钟 -->
+        <property name="removeAbandonedTimeout" value="1800" />
+        <!-- 关闭abanded连接时输出错误日志 -->
+        <property name="logAbandoned" value="true" />
+        <!-- 监控数据库 -->
+        <property name="filters" value="mergeStat" />
+    </bean>
+
+    <!-- 3.配置SqlSessionFactory对象 -->
+    <!--  让spring管理sqlSessionFactory ，使用mybatis和spring整合包中的类,不需要在代码中重复生成sqlSessionFactory对象-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 配置MyBaties全局配置文件:mybatis-config.xml -->
+        <property name="configLocation" value="classpath:mybatis/mybatis-config.xml"/>
+        <!-- 扫描sql配置文件:mapper需要的xml文件 讲道理是不用配的-->
+        <!--<property name="mapperLocations" value="classpath:cn/edu/art/ssm/dao/*.xml" />-->
+    </bean>
+
+    <!-- 4.配置扫描Dao接口包，动态实现Dao接口，注入到spring容器中 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- 给出需要扫描Dao接口包 -->
+        <property name="basePackage" value="cn.edu.art.ssm.dao"/>
+        <!-- 注入sqlSessionFactory -->
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+    </bean>
+
+
+    <!--************************************ 2. spring-service部分 ********************************-->
+
+    <!-- 扫描service包下所有使用注解的类型 -->
+    <context:component-scan base-package="cn.edu.art.ssm.service" />
+
+    <!-- 配置事务管理器 对mybatis操作数据库进行事务控制，spring使用jdbc的事务控制类-->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 注入数据库连接池 -->
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <!-- 配置基于注解的声明式事务 -->
+    <tx:annotation-driven transaction-manager="transactionManager" />
+
+    <!--service层配置  -->
+    <!--<bean id="administratorService" class="cn.art.edu.service.impl.AdministratorServiceImpl"/>-->
+    <bean id="testService" class="cn.edu.art.ssm.service.TestService"/>
+
+    <!-- 文件上传 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+
+    <!-- 通知，声明式的事务管理 -->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <!-- 传播行为 -->
+            <tx:method name="save*" propagation="REQUIRED"/>
+            <tx:method name="delete*" propagation="REQUIRED"/>
+            <tx:method name="insert*" propagation="REQUIRED"/>
+            <tx:method name="update*" propagation="REQUIRED"/>
+            <tx:method name="find*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="query*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+            <tx:method name="select*" propagation="SUPPORTS" read-only="true"/>
+        </tx:attributes>
+    </tx:advice>
+
+    <!-- aop ，这里的意思是对cn.art.edu.service.impl包下的所有类的所有方法进行事务控制，这些方法在执行前后都会执行一些语句进行事务控制， 面向切面编程-->
+    <aop:config>
+        <aop:advisor advice-ref="txAdvice" pointcut="execution(* cn.edu.art.ssm.service.impl.*.*(..))"/>
+    </aop:config>
+
+
+
+
+
+
+</beans>
